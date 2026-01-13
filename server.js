@@ -1,13 +1,18 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const { v4: uuid } = require("uuid");
-require("dotenv").config();
-const { Pool } = require("pg");
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import { v4 as uuid } from "uuid";
+import dotenv from "dotenv";
+import pkg from "pg";
+
+dotenv.config();
+
+const { Pool } = pkg;
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+
 
 const PORT = 5000;
 
