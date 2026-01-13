@@ -14,7 +14,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 const DATABASE_URL = process.env.DATABASE_URL;
 let pool = null;
