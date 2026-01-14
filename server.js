@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import pkg from "pg";
 import { sendLeadEmail } from "./email.js";
 
-
 dotenv.config();
 
 const { Pool } = pkg;
@@ -14,7 +13,6 @@ const { Pool } = pkg;
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-
 
 const PORT = process.env.PORT || 5000;
 
@@ -53,8 +51,6 @@ initDb()
   .catch((err) => {
     console.error("DB init error:", err);
   });
-
-
 
 // Common disposable domains (small list; extend as needed)
 const DISPOSABLE_DOMAINS = [
@@ -186,12 +182,27 @@ app.post("/leads", async (req, res) => {
         createdAtUTC,
       };
 
+      // 1️⃣ Fire-and-forget notifications (DO NOT block user)
+      console.log("📧 About to send email notification");
+
+      (async () => {
+        try {
+          await sendLeadEmail(lead);
+        } catch (e) {
+          console.error("Email notification failed:", e);
+        }
+
+        // try {
+        //   await addLeadToSheet(lead);
+        // } catch (e) {
+        //   console.error("Google Sheet update failed:", e);
+        // }
+      })();
+
       return res.status(201).json({
         message:
           "Thanks! Your inquiry has been received — we will contact you soon.",
         lead,
-        
-
       });
     } catch (err) {
       console.error("DB insert error:", err);
@@ -217,33 +228,12 @@ app.post("/leads", async (req, res) => {
     createdAtUTC,
   };
 
-  // 1️⃣ Fire-and-forget notifications (DO NOT block user)
-  console.log("📧 About to send email notification");
-
-(async () => {
-  try {
-    await sendLeadEmail(lead);
-  } catch (e) {
-    console.error("Email notification failed:", e);
-  }
-
-  // try {
-  //   await addLeadToSheet(lead);
-  // } catch (e) {
-  //   console.error("Google Sheet update failed:", e);
-  // }
-})();
-
   // 2️⃣ Respond to client immediately (fast UX)
-res.status(201).json({
-  message:
-    "Thanks! Your inquiry has been received — we will contact you soon.",
-  lead,
-});
-
- 
-
-
+  res.status(201).json({
+    message:
+      "Thanks! Your inquiry has been received — we will contact you soon.",
+    lead,
+  });
 });
 
 /**
