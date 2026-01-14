@@ -4,6 +4,8 @@ import bodyParser from "body-parser";
 import { v4 as uuid } from "uuid";
 import dotenv from "dotenv";
 import pkg from "pg";
+import { sendLeadEmail } from "./email.js";
+
 
 dotenv.config();
 
@@ -188,6 +190,8 @@ app.post("/leads", async (req, res) => {
         message:
           "Thanks! Your inquiry has been received — we will contact you soon.",
         lead,
+        
+
       });
     } catch (err) {
       console.error("DB insert error:", err);
@@ -215,11 +219,28 @@ app.post("/leads", async (req, res) => {
 
   leads.push(lead);
 
-  res.status(201).json({
-    message:
-      "Thanks! Your inquiry has been received — we will contact you soon.",
-    lead,
-  });
+  // 1️⃣ Respond to client immediately (fast UX)
+res.status(201).json({
+  message:
+    "Thanks! Your inquiry has been received — we will contact you soon.",
+  lead,
+});
+
+// 2️⃣ Fire-and-forget notifications (DO NOT block user)
+(async () => {
+  try {
+    await sendLeadEmail(lead);
+  } catch (e) {
+    console.error("Email notification failed:", e);
+  }
+
+  // try {
+  //   await addLeadToSheet(lead);
+  // } catch (e) {
+  //   console.error("Google Sheet update failed:", e);
+  // }
+})();
+
 });
 
 /**
