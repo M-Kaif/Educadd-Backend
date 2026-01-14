@@ -3,6 +3,8 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendLeadEmail(lead) {
+  console.log("📧 sendLeadEmail() called", lead.email);
+
   const { name, email, phone, course, createdAt } = lead;
 
   await resend.emails.send({

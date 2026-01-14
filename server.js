@@ -217,7 +217,7 @@ app.post("/leads", async (req, res) => {
     createdAtUTC,
   };
 
-  leads.push(lead);
+
 
   // 1️⃣ Respond to client immediately (fast UX)
 res.status(201).json({
@@ -225,6 +225,7 @@ res.status(201).json({
     "Thanks! Your inquiry has been received — we will contact you soon.",
   lead,
 });
+console.log("📧 About to send email notification");
 
 // 2️⃣ Fire-and-forget notifications (DO NOT block user)
 (async () => {
