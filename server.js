@@ -217,17 +217,9 @@ app.post("/leads", async (req, res) => {
     createdAtUTC,
   };
 
+  // 1️⃣ Fire-and-forget notifications (DO NOT block user)
+  console.log("📧 About to send email notification");
 
-
-  // 1️⃣ Respond to client immediately (fast UX)
-res.status(201).json({
-  message:
-    "Thanks! Your inquiry has been received — we will contact you soon.",
-  lead,
-});
-console.log("📧 About to send email notification");
-
-// 2️⃣ Fire-and-forget notifications (DO NOT block user)
 (async () => {
   try {
     await sendLeadEmail(lead);
@@ -241,6 +233,16 @@ console.log("📧 About to send email notification");
   //   console.error("Google Sheet update failed:", e);
   // }
 })();
+
+  // 2️⃣ Respond to client immediately (fast UX)
+res.status(201).json({
+  message:
+    "Thanks! Your inquiry has been received — we will contact you soon.",
+  lead,
+});
+
+ 
+
 
 });
 
