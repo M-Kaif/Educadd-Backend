@@ -16,7 +16,6 @@ export async function sendLeadEmail(lead) {
       <p><strong>Name:</strong> ${name}</p>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Phone:</strong> ${phone}</p>
-      <p><strong>Address:</strong> ${lead.address || ""}</p>
       <p><strong>Course:</strong> ${course}</p>
       <p><strong>Address:</strong> ${address}</p>
       <p><strong>Time:</strong> ${createdAt}</p>
