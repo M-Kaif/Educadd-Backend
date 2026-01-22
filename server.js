@@ -4,9 +4,15 @@ import bodyParser from "body-parser";
 import { v4 as uuid } from "uuid";
 import dotenv from "dotenv";
 import pkg from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 import { sendLeadEmail } from "./email.js";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const { Pool } = pkg;
 
@@ -36,6 +42,7 @@ async function initDb() {
       name TEXT NOT NULL,
       email TEXT NOT NULL,
       phone TEXT NOT NULL,
+      address TEXT,
       course TEXT,
       source TEXT DEFAULT 'website',
       created_at_utc TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -112,7 +119,7 @@ function validatePhoneRaw(phoneRaw) {
  * Create Lead
  */
 app.post("/leads", async (req, res) => {
-  const { name, email, phone, course } = req.body;
+  const { name, email, phone, course, address } = req.body;
 
   if (!name || !email || !phone) {
     return res
@@ -143,10 +150,10 @@ app.post("/leads", async (req, res) => {
     try {
       const id = uuid();
       const insertSQL = `
-        INSERT INTO leads (id, name, email, phone, course, source)
-        VALUES ($1,$2,$3,$4,$5,$6)
+        INSERT INTO leads (id, name, email, phone, address, course, source)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
         ON CONFLICT (email, phone) DO NOTHING
-        RETURNING id, name, email, phone, course, source, created_at_utc;
+        RETURNING id, name, email, phone, address, course, source, created_at_utc;
       `;
 
       const result = await pool.query(insertSQL, [
@@ -154,6 +161,7 @@ app.post("/leads", async (req, res) => {
         name.trim(),
         email.trim().toLowerCase(),
         cleanedPhone,
+        address || "",
         course || "",
         "website",
       ]);
@@ -176,6 +184,7 @@ app.post("/leads", async (req, res) => {
         name: row.name,
         email: row.email,
         phone: row.phone,
+        address: row.address,
         course: row.course,
         source: row.source,
         createdAt: createdAtIST,
@@ -192,11 +201,11 @@ app.post("/leads", async (req, res) => {
           console.error("Email notification failed:", e);
         }
 
-        // try {
-        //   await addLeadToSheet(lead);
-        // } catch (e) {
-        //   console.error("Google Sheet update failed:", e);
-        // }
+      //   // try {
+      //   //   await addLeadToSheet(lead);
+      //   // } catch (e) {
+      //   //   console.error("Google Sheet update failed:", e);
+      //   // }
       })();
 
       return res.status(201).json({
@@ -222,6 +231,7 @@ app.post("/leads", async (req, res) => {
     name: name.trim(),
     email: email.trim().toLowerCase(),
     phone: cleanedPhone,
+    address: address || "",
     course: course || "",
     source: "website",
     createdAt: createdAtIST,
@@ -244,7 +254,7 @@ app.get("/leads", async (req, res) => {
     try {
       const rows = (
         await pool.query(`
-          SELECT id, name, email, phone, course, source, created_at_utc
+          SELECT id, name, email, phone, address, course, source, created_at_utc
           FROM leads
           ORDER BY created_at_utc DESC
         `)
@@ -255,6 +265,7 @@ app.get("/leads", async (req, res) => {
         name: r.name,
         email: r.email,
         phone: r.phone,
+        address: r.address,
         course: r.course,
         source: r.source,
         createdAtUTC: r.created_at_utc.toISOString(),
@@ -271,6 +282,56 @@ app.get("/leads", async (req, res) => {
   }
 
   res.json(leads);
+});
+
+/**
+ * Download Brochure
+ */
+app.get("/download-brochure", (req, res) => {
+  try {
+    const brochurePath = path.join(
+      __dirname,
+      "Brochure",
+      "EduCADD_Courses.pdf",
+    );
+
+    if (!fs.existsSync(brochurePath)) {
+      return res.status(404).json({ message: "Brochure file not found." });
+    }
+
+    const stats = fs.statSync(brochurePath);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Length", stats.size);
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="All Courses Brochure.pdf"',
+    );
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
+    const fileStream = fs.createReadStream(brochurePath);
+
+    fileStream.on("error", (err) => {
+      console.error("File stream error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Error downloading brochure." });
+      } else {
+        res.end();
+      }
+    });
+
+    res.on("error", (err) => {
+      console.error("Response error:", err);
+      fileStream.destroy();
+    });
+
+    fileStream.pipe(res);
+  } catch (err) {
+    console.error("Brochure download error:", err);
+    res.status(500).json({ message: "Server error downloading brochure." });
+  }
 });
 
 process.on("unhandledRejection", (reason, p) => {

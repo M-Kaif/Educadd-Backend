@@ -5,7 +5,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function sendLeadEmail(lead) {
   console.log("📧 sendLeadEmail() called", lead.email);
 
-  const { name, email, phone, course, createdAt } = lead;
+  const { name, email, phone, course, address, createdAt } = lead;
 
   await resend.emails.send({
     from: "Educadd <onboarding@resend.dev>",
@@ -16,9 +16,10 @@ export async function sendLeadEmail(lead) {
       <p><strong>Name:</strong> ${name}</p>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Phone:</strong> ${phone}</p>
+      <p><strong>Address:</strong> ${lead.address || ""}</p>
       <p><strong>Course:</strong> ${course}</p>
+      <p><strong>Address:</strong> ${address}</p>
       <p><strong>Time:</strong> ${createdAt}</p>
     `
   });
 }
-

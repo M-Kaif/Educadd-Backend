@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS leads (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   phone TEXT NOT NULL,
+  address TEXT,
   course TEXT,
   source TEXT DEFAULT 'website',
   created_at_utc TIMESTAMPTZ NOT NULL DEFAULT NOW(),
