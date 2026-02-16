@@ -195,12 +195,12 @@ app.post("/leads", async (req, res) => {
       // 1️⃣ Fire-and-forget notifications (DO NOT block user)
       console.log("📧 About to send email notification");
 
-      // (async () => {
-      //   try {
-      //     await sendLeadEmail(lead);
-      //   } catch (e) {
-      //     console.error("Email notification failed:", e);
-      //   }
+      (async () => {
+        try {
+          await sendLeadEmail(lead);
+        } catch (e) {
+          console.error("Email notification failed:", e);
+        }
 
       // //   // try {
       // //   //   await addLeadToSheet(lead);
