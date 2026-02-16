@@ -7,9 +7,12 @@ import pkg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import { sendLeadEmail } from "./email.js";
+// import { sendLeadEmail } from "./email.js";
+import dns from "dns";
+
 
 dotenv.config();
+dns.setDefaultResultOrder("ipv4first");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,10 +32,7 @@ async function initDb() {
   if (!DATABASE_URL) return;
   pool = new Pool({
     connectionString: DATABASE_URL,
-    ssl:
-      process.env.NODE_ENV === "production"
-        ? { rejectUnauthorized: false }
-        : false,
+    ssl: { rejectUnauthorized: false },
   });
 
   // Ensure table exists (id generated in Node to avoid extension requirements)
@@ -194,19 +194,19 @@ app.post("/leads", async (req, res) => {
       // 1️⃣ Fire-and-forget notifications (DO NOT block user)
       console.log("📧 About to send email notification");
 
-      (async () => {
-        try {
-          await sendLeadEmail(lead);
-        } catch (e) {
-          console.error("Email notification failed:", e);
-        }
+      // (async () => {
+      //   try {
+      //     await sendLeadEmail(lead);
+      //   } catch (e) {
+      //     console.error("Email notification failed:", e);
+      //   }
 
-      //   // try {
-      //   //   await addLeadToSheet(lead);
-      //   // } catch (e) {
-      //   //   console.error("Google Sheet update failed:", e);
-      //   // }
-      })();
+      // //   // try {
+      // //   //   await addLeadToSheet(lead);
+      // //   // } catch (e) {
+      // //   //   console.error("Google Sheet update failed:", e);
+      // //   // }
+      // })();
 
       return res.status(201).json({
         message:
