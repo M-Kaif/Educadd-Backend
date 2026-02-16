@@ -1,3 +1,6 @@
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import express from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -7,12 +10,10 @@ import pkg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-// import { sendLeadEmail } from "./email.js";
-import dns from "dns";
+import { sendLeadEmail } from "./email.js";
 
 
 dotenv.config();
-dns.setDefaultResultOrder("ipv4first");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
